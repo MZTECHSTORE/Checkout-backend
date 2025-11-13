@@ -74,7 +74,7 @@ app.post('/processar-vendorapay', async (req, res) => {
         cardExpiry: cardExpiry.replace('/', ''), // Limpa /
         cardCvv: cardCvv,
         cardName: cardName,
-        enviroment: 'dev' // 'dev' para teste
+        enviroment: 'prod'
     };
 
     try {
