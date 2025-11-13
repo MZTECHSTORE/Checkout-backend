@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Profissional - MZ TECH STORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.paypal.com/sdk/js?client-id=AZPSW1Sr6x52LwKUtGD1v_r5i1-q-6pnXrkFxNZT7es0jV7HikEL7enB-jKM0VbhW6h7hIVb2IvLxa7I&currency=MZN&intent=capture"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .checkout-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .logo {
+            width: 150px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            text-align: left;
+        }
+        .total {
+            text-align: right;
+            font-size: 1.5em;
+            color: #ffd700;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        #paypal-button-container {
+            margin: 20px 0;
+        }
+        .security-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+        .security-info::before {
+            content: "🔒 ";
+            font-size: 1.2em;
+        }
+        .warning {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            color: #ffd700;
+            font-size: 0.9em;
+        }
+        .vendorapay-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .vendorapay-btn:hover {
+            background: #45a049;
+        }
+        .vendorapay-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .checkout-container:hover {
+            animation: pulse 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <img src="https://via.placeholder.com/150x50/1e3c72/FFFFFF?text=MZ+TECH+STORE" alt="Logo MZ TECH STORE" class="logo">
+        <h1>Finalizar Compra</h1>
+        <p>Pague com Visa, MasterCard, PayPal ou Vendorapay de forma segura e rápida.</p>
+        
+        <div class="cart-item">
+            <span>Smartphone Galaxy S24</span>
+            <span>1 x 1.200 MZN</span>
+        </div>
+        <div class="cart-item">
+            <span>Fones Wireless AirPods</span>
+            <span>1 x 800 MZN</span>
+        </div>
+        <div class="total">
+            Total: 2.000 MZN
+        </div>
+        
+        <!-- PayPal Button -->
+        <div id="paypal-button-container"></div>
+        
+        <!-- Vendorapay Button -->
+        <button id="vendorapayBtn" class="vendorapay-btn" onclick="payWithVendorapay()">Pagar com Vendorapay (Visa/MC, M-Pesa, e-Mola)</button>
+        
+        <div class="security-info">
+            Seu pagamento é protegido com criptografia avançada. Recebemos diretamente no PayPal Business ou Vendorapay.
+        </div>
+    </div>
+
+    <script>
+        // Backend Vercel URL
+        const BACKEND_URL = 'https://checkout-backend-mztechstores-projects.vercel.app';
+
+        // Vendorapay V1 API (Default MZN)
+        const VENDORAPAY_API_KEY = 'tpkhv80bbjago1qm13ldt23b6k971u6mqg30ca1h2rlku4dw78r6z560g07t';
+        const VENDORAPAY_API_URL = 'https://vendorapay.com/api/payment/create'; // V1 Endpoint correto para MZN
+
+        // PayPal Buttons (Atualizado para MZN)
+        paypal.Buttons({
+            style: {
+                shape: 'rect',
+                color: 'gold',
+                layout: 'vertical',
+                label: 'paypal',
+                tagline: false,
+                height: 50
+            },
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: '2000.00'  // Total 2.000 MZN
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    fetch(`${BACKEND_URL}/capturar-pagamento`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: data.orderID })
+                    }).then(response => response.json()).then(backendData => {
+                        if (backendData.success) {
+                            alert('Pagamento PayPal realizado com sucesso! Obrigado!');
+                        } else {
+                            alert('Erro na confirmação: ' + backendData.error);
+                        }
+                    }).catch(err => {
+                        alert('Pagamento aprovado, mas erro na confirmação.');
+                    });
+                });
+            },
+            onError: function(err) {
+                console.error('Erro PayPal:', err);
+                alert('Erro no PayPal. Tente novamente.');
+            }
+        }).render('#paypal-button-container');
+
+        // Vendorapay Integration (V1 - Default MZN)
+        async function payWithVendorapay() {
+            const btn = document.getElementById('vendorapayBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+
+            const amount = '2000.00'; // Total 2.000 MZN
+            const context = 'Pagamento MZ TECH STORE - Produtos Eletrônicos';
+            const callbackUrl = BACKEND_URL + '/vendorapay-callback'; // Webhook no backend
+            const returnUrl = window.location.origin + '/sucesso'; // Página de sucesso
+
+            const headers = {
+                'apiKey': VENDORAPAY_API_KEY,
+                'Content-Type': 'application/json'
+            };
+            const payload = {
+                amount: amount,
+                context: context,
+                callbackUrl: callbackUrl,
+                returnUrl: returnUrl,
+                enviroment: 'dev' // 'dev' para teste (sem charges reais)
+            };
+
+            try {
+                console.log('Criando pagamento Vendorapay V1...');
+                const response = await fetch(VENDORAPAY_API_URL, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                console.log('Resposta Vendorapay V1:', data, 'Status:', response.status); // Log para debug
+
+                if (response.ok && data.success && data.redirectUrl) {
+                    // Redireciona para checkout Vendorapay
+                    window.location.href = data.redirectUrl;
+                } else {
+                    alert('Erro Vendorapay: Status ' + response.status + ' - ' + (data.error || data.message || 'Falha no processamento. Verifique console F12.'));
+                }
+            } catch (err) {
+                console.error('Erro de conexão Vendorapay V1:', err);
+                alert('Erro de conexão Vendorapay. Verifique internet e tente novamente. Detalhes no console F12.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Pagar com Vendorapay (Visa/MC, M-Pesa, e-Mola)';
+            }
+        }
+    </script>
+</body>
+</html>
