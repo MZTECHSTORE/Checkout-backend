@@ -1,78 +1,106 @@
-// server.js - Backend Node.js completo para recebimento PayPal
-// Dependências: npm install express @paypal/checkout-server-sdk dotenv cors
+// server.js - Backend Node.js completo para recebimento PayPal + Vendorapay
+// Dependências: npm install express @paypal/checkout-server-sdk dotenv cors axios
 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const paypal = require('@paypal/checkout-server-sdk');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: '*' })); // Ajuste para seu domínio GitHub Pages em produção
+app.use(cors({ origin: '*' }));
 
-// Configuração PayPal - Use SANDBOX para testes, LIVE para produção
+// Configuração PayPal
 const environment = process.env.PAYPAL_MODE === 'live' 
     ? new paypal.core.LiveEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_SECRET_ID)
     : new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_SECRET_ID);
 
 const client = new paypal.core.PayPalHttpClient(environment);
 
-// Rota raiz para evitar 404 (página simples de status)
+// Rota raiz
 app.get('/', (req, res) => {
     res.json({ 
-        message: 'Backend MZ TECH STORE OK - Recebimento PayPal configurado',
+        message: 'Backend MZ TECH STORE OK - PayPal + Vendorapay configurado',
         endpoints: {
             health: '/health',
-            capture: '/capturar-pagamento (POST)'
+            paypal: '/capturar-pagamento (POST)',
+            vendorapay: '/processar-vendorapay (POST)'
         },
         mode: process.env.PAYPAL_MODE || 'sandbox'
     });
 });
 
-// Endpoint para capturar pagamento PayPal (chamado do frontend após onApprove)
+// Endpoint PayPal (mantido)
 app.post('/capturar-pagamento', async (req, res) => {
     const { orderID } = req.body;
-
-    if (!orderID) {
-        return res.status(400).json({ error: 'orderID é obrigatório' });
-    }
+    if (!orderID) return res.status(400).json({ error: 'orderID é obrigatório' });
 
     const request = new paypal.orders.OrdersCaptureRequest(orderID);
     request.requestBody({});
 
     try {
         const capture = await client.execute(request);
-        
-        // Verifica se o pagamento foi aprovado
         if (capture.statusCode === 201) {
-            console.log('Pagamento capturado com sucesso:', capture.result);
-            res.json({
-                success: true,
-                details: capture.result,
-                message: 'Pagamento realizado e recebido no PayPal Business!'
-            });
+            res.json({ success: true, details: capture.result, message: 'Pagamento PayPal recebido!' });
         } else {
-            res.status(400).json({ error: 'Falha na captura do pagamento', details: capture });
+            res.status(400).json({ error: 'Falha na captura', details: capture });
         }
     } catch (err) {
-        console.error('Erro ao capturar pagamento:', err);
-        res.status(500).json({ error: 'Erro interno no servidor', message: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
-// Endpoint de saúde (opcional, para testes)
-app.get('/health', (req, res) => {
-    res.json({ status: 'Servidor rodando - Recebimento PayPal OK', timestamp: new Date().toISOString() });
+// Novo Endpoint Vendorapay (Processamento Direto com Credenciais)
+app.post('/processar-vendorapay', async (req, res) => {
+    const { apiKey, amount, cardNumber, cardExpiry, cardCvv, cardName, currency = 'MZN' } = req.body;
+
+    if (!apiKey || !amount || !cardNumber || !cardExpiry || !cardCvv || !cardName) {
+        return res.status(400).json({ error: 'Dados obrigatórios faltando' });
+    }
+
+    const VENDORAPAY_URL = 'https://vendorapay.com/api/payment/process'; // Endpoint para charge direto
+    const headers = {
+        'apiKey': apiKey,
+        'Content-Type': 'application/json'
+    };
+    const payload = {
+        amount: amount,
+        currency: currency,
+        cardNumber: cardNumber.replace(/\s/g, ''), // Limpa espaços
+        cardExpiry: cardExpiry.replace('/', ''), // Limpa /
+        cardCvv: cardCvv,
+        cardName: cardName,
+        enviroment: 'dev' // 'dev' para teste
+    };
+
+    try {
+        console.log('Processando Vendorapay:', payload);
+        const response = await axios.post(VENDORAPAY_URL, payload, { headers });
+        const data = response.data;
+
+        if (data.success) {
+            res.json({ success: true, message: 'Pagamento Vendorapay recebido!', transactionId: data.transactionId });
+        } else {
+            res.status(400).json({ error: data.error || 'Falha no processamento Vendorapay' });
+        }
+    } catch (err) {
+        console.error('Erro Vendorapay:', err.response?.data || err.message);
+        res.status(500).json({ error: err.response?.data?.error || 'Erro de conexão Vendorapay' });
+    }
 });
 
-// Inicia o servidor
+// Health
+app.get('/health', (req, res) => {
+    res.json({ status: 'Servidor rodando - PayPal + Vendorapay OK', timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor na porta ${PORT}`);
     console.log(`Modo PayPal: ${process.env.PAYPAL_MODE || 'sandbox'}`);
-    console.log(`Acesse: http://localhost:${PORT}/health para testar`);
 });
 
 module.exports = app;
