@@ -20,6 +20,18 @@ const environment = process.env.PAYPAL_MODE === 'live'
 
 const client = new paypal.core.PayPalHttpClient(environment);
 
+// Rota raiz para evitar 404 (página simples de status)
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'Backend MZ TECH STORE OK - Recebimento PayPal configurado',
+        endpoints: {
+            health: '/health',
+            capture: '/capturar-pagamento (POST)'
+        },
+        mode: process.env.PAYPAL_MODE || 'sandbox'
+    });
+});
+
 // Endpoint para capturar pagamento PayPal (chamado do frontend após onApprove)
 app.post('/capturar-pagamento', async (req, res) => {
     const { orderID } = req.body;
