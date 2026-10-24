@@ -82,16 +82,16 @@
       
       <div class="order-item">
         <div>
-          <div class="item-name">Conta Netflix Premium (4K)</div>
-          <small style="color: var(--text-muted);">Acesso 30 Dias - 1 Tela</small>
+          <div class="item-name">Acesso VIP / Serviço MZ TECH</div>
+          <small style="color: var(--text-muted);">Ativação Instantânea</small>
         </div>
         <div class="item-price">50.00 MT</div>
       </div>
 
       <div class="order-item">
         <div>
-          <div class="item-name">Taxa de Ativação</div>
-          <small style="color: var(--text-muted);">Entrega Instantânea</small>
+          <div class="item-name">Taxa de Processamento</div>
+          <small style="color: var(--text-muted);">Incluído</small>
         </div>
         <div class="item-price">0.00 MT</div>
       </div>
@@ -125,7 +125,6 @@
 
         <div class="form-group">
           <label for="card-element">Dados do Cartão (Visa / Mastercard)</label>
-          <!-- O elemento do Stripe é injetado aqui -->
           <div id="card-element"></div>
           <div id="card-errors" role="alert"></div>
         </div>
@@ -143,12 +142,12 @@
   </div>
 
   <script>
-    // Substitua 'pk_live_...' pela sua Publishable Key do Stripe do seu Dashboard
-    // Exemplo: const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTe...');
-    const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTeJlV0cejuLCgda1kahE6bMjcaoOHomARtcKgkRnDHf1bTi2CFyooTlsjL5yyneVScJggkRlXT00ng0cNhYm');
+    // Baro a Publishable Key para ti Stripe
+    const STRIPE_PUBLISHABLE_KEY = 'pk_live_51UT9bdRpwlS3XQTecBTV1tZtosUv9fKZuGTDpWm7YXCvGes6kNJSDA0IZw0DrQasDuOhV5iCfdXgxCbBbr3KlpPc00G2piElQn';
+    
+    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
     const elements = stripe.elements();
 
-    // Estilo personalizado para o campo do cartão dentro do formulário dark
     const style = {
       base: {
         color: '#f8fafc',
@@ -163,11 +162,9 @@
       }
     };
 
-    // Cria o campo de cartão do Stripe
     const card = elements.create('card', { style: style, hidePostalCode: true });
     card.mount('#card-element');
 
-    // Mostra erros de validação em tempo real
     card.on('change', ({ error }) => {
       const displayError = document.getElementById('card-errors');
       if (error) {
@@ -177,7 +174,6 @@
       }
     });
 
-    // Submissão do formulário
     const form = document.getElementById('payment-form');
     const submitBtn = document.getElementById('submit-btn');
 
@@ -189,7 +185,6 @@
       const nameInput = document.getElementById('name').value;
       const emailInput = document.getElementById('email').value;
 
-      // Criação do token de pagamento seguro no Stripe
       const { token, error } = await stripe.createToken(card, {
         name: nameInput,
         email: emailInput
@@ -198,12 +193,9 @@
       if (error) {
         document.getElementById('card-errors').textContent = error.message;
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 350.00 MT';
+        submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 50.00 MT';
       } else {
-        // Sucesso no processamento
-        console.log('Stripe Token criado com sucesso:', token.id);
         alert(`✅ Pagamento efetuado com sucesso!\nToken do Stripe: ${token.id}\nObrigado por comprar na MZ TECH STORE.`);
-        
         submitBtn.style.background = '#059669';
         submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Pagamento Confirmado!';
       }
