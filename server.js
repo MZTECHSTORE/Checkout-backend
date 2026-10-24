@@ -13,12 +13,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Rota de Checkout / Subscrição integrada com o Stripe
 app.post('/api/checkout', async (req, res) => {
   try {
     const { name, email, paymentMethodId } = req.body;
 
-    // 1. Criar o Cliente no Stripe
     const customer = await stripe.customers.create({
       name: name,
       email: email,
@@ -28,7 +26,6 @@ app.post('/api/checkout', async (req, res) => {
       },
     });
 
-    // 2. Criar a Subscrição usando o ID de preço fornecido
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: 'price_1UUCqNRpwlS3XQTeWoAIbgXH' }],
