@@ -6,82 +6,54 @@ const Stripe = require('stripe');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração do Stripe com a Secret Key do ambiente ou fallback direto
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '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';
 const stripe = Stripe(stripeSecretKey);
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Serve os ficheiros estáticos (checkout.html)
+app.use(express.static('public'));
 
-// ==========================================
-// ROTA PRINCIPAL DE CHECKOUT (STRIPE)
-// ==========================================
+// Rota de Checkout / Subscrição integrada com o Stripe
 app.post('/api/checkout', async (req, res) => {
   try {
-    const { amount, currency, email, name, description } = req.body;
+    const { name, email, paymentMethodId } = req.body;
 
-    // Criar o Payment Intent no Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount || 35000, // Valor em cêntimos/unidades mínimas (ex:50.00 MT = 5000)
-      currency: currency || 'mzn',
-      receipt_email: email,
-      description: description || 'Compra na MZ TECH STORE',
-      metadata: {
-        cliente_nome: name || 'Cliente MZ TECH STORE',
-        plataforma: 'MZ TECH STORE Web'
+    // 1. Criar o Cliente no Stripe
+    const customer = await stripe.customers.create({
+      name: name,
+      email: email,
+      payment_method: paymentMethodId,
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
       },
-      payment_method_types: ['card'] // Aceita Visa, Mastercard, etc.
     });
 
-    // Devolve o clientSecret necessário para o frontend confirmar o pagamento
-    res.json({
-      clientSecret: paymentIntent.client_secret,
-      id: paymentIntent.id
+    // 2. Criar a Subscrição usando o ID de preço fornecido
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: 'price_1UUCqNRpwlS3XQTeWoAIbgXH' }],
+      expand: ['latest_invoice.payment_intent'],
+      off_session: true,
+      payment_behavior: 'error_if_incomplete',
+      proration_behavior: 'none',
     });
+
+    const invoice = subscription.latest_invoice;
+    const paymentIntent = invoice ? invoice.payment_intent : null;
+
+    res.json({
+      success: true,
+      subscriptionId: subscription.id,
+      status: subscription.status,
+      clientSecret: paymentIntent ? paymentIntent.client_secret : null
+    });
+
   } catch (error) {
-    console.error('Erro ao criar Intent de Pagamento:', error);
+    console.error('Erro ao processar subscrição no Stripe:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ==========================================
-// WEBHOOK DO STRIPE (Confirmação de Pagamento)
-// ==========================================
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
-  try {
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(req.body);
-    }
-  } catch (err) {
-    console.error(`Erro de validação no Webhook: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Notificação de pagamento concluído com sucesso
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    console.log(`✅ Pagamento confirmado com sucesso para MZ TECH STORE! ID: ${paymentIntent.id}`);
-    // Aqui pode adicionar a lógica para libertar a conta/produto ao cliente
-  }
-
-  res.json({ received: true });
-});
-
-// Rota de teste simples
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Servidor de Checkout MZ TECH STORE a funcionar!' });
-});
-
-// Inicialização do Servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor de Checkout MZ TECH STORE ativo na porta ${PORT}`);
+  console.log(`🚀 Servidor MZ TECH STORE a correr na porta ${PORT}`);
 });
