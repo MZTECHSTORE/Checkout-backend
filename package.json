@@ -1,7 +1,7 @@
 {
-  "name": "mz-tech-store-checkout",
+  "name": "mz-tech-store-backend",
   "version": "1.0.0",
-  "description": "Servidor de Checkout Stripe para MZ TECH STORE",
+  "description": "Servidor backend para MZ TECH STORE e MZ Football AI",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
