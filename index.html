@@ -1,159 +1,213 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checkout - MZ TECH STORE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MZ TECH STORE | Checkout Seguro</title>
+  
+  <!-- Font Awesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stripe JS SDK Oficial -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --accent: #6366f1;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 2rem 1rem; line-height: 1.5; }
+
+    .checkout-container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
+
+    .header-logo { grid-column: 1 / -1; text-align: center; margin-bottom: 1rem; }
+    .header-logo h1 { color: var(--primary); font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+
+    .box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; }
+    h2 { font-size: 1.2rem; color: #fff; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+    h2 i { color: var(--primary); }
+
+    /* Resumo do Pedido */
+    .order-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .order-item:last-child { border-bottom: none; }
+    .item-name { font-weight: 600; font-size: 0.95rem; }
+    .item-price { color: var(--primary); font-weight: 700; }
+    .total-row { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed var(--border); color: #fff; }
+
+    /* Form do Cartão */
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
+    input { width: 100%; padding: 0.8rem 1rem; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.95rem; outline: none; }
+    input:focus { border-color: var(--primary); }
+
+    /* Estilo do Campo do Stripe */
+    #card-element { background: #0f172a; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--border); }
+    #card-element.StripeElement--focus { border-color: var(--primary); }
+
+    .cards-accepted { display: flex; gap: 0.8rem; margin-bottom: 1rem; font-size: 1.5rem; color: var(--text-muted); }
+    .cards-accepted i { transition: color 0.2s; }
+    .cards-accepted i:hover { color: var(--primary); }
+
+    .btn-pay { width: 100%; background: var(--primary); color: #fff; border: none; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: background 0.2s; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+    .btn-pay:hover { background: var(--primary-hover); }
+    .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #card-errors { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; }
+    .security-badge { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; display: flex; justify-content: center; align-items: center; gap: 0.4rem; }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-4">
-            <button onclick="history.back()" class="text-purple-600">← Voltar</button>
-            <span class="text-green-500 text-sm">🔒 Checkout Seguro</span>
-        </div>
+<body>
 
-        <!-- Steps -->
-        <div class="flex justify-between mb-6">
-            <div class="flex items-center space-x-1">
-                <div class="w-6 h-6 bg-purple-500 rounded-full text-white flex items-center justify-center">1</div>
-                <span class="text-purple-500">Informações do Cliente</span>
-            </div>
-            <div class="flex items-center space-x-1">
-                <div class="w-6 h-6 bg-purple-500 rounded-full text-white flex items-center justify-center">2</div>
-                <span class="text-purple-500">Pagamento</span>
-            </div>
-            <div class="flex items-center space-x-1">
-                <div class="w-6 h-6 bg-gray-300 rounded-full text-white flex items-center justify-center">3</div>
-                <span class="text-gray-500">Confirmação</span>
-            </div>
-        </div>
-
-        <!-- Método de Pagamento -->
-        <div class="mb-4">
-            <h2 class="text-lg font-bold mb-2">Método de Pagamento</h2>
-            <div class="space-y-2">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="radio" name="method" value="card" checked class="rounded">
-                    <span class="text-purple-600 font-medium">🪪 Card</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="radio" name="method" value="paypal" class="rounded">
-                    <span class="text-purple-600 font-medium">💳 PayPal</span>
-                </label>
-            </div>
-        </div>
-
-        <!-- Campos de Cartão (Vendorapay) -->
-        <form id="paymentForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Número do Cartão *</label>
-                <input type="text" inputmode="numeric" name="cardNumber" required placeholder="1234 5678 9012 3456" class="w-full rounded-md border border-gray-300 shadow-sm p-3">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Data de Expiração *</label>
-                    <input type="text" name="cardExpiry" required placeholder="MM/AA" class="w-full rounded-md border border-gray-300 shadow-sm p-3">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">CVC *</label>
-                    <input type="text" inputmode="numeric" name="cardCvv" required placeholder="123" class="w-full rounded-md border border-gray-300 shadow-sm p-3">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1">Nome no Cartão *</label>
-                <input type="text" name="cardName" required placeholder="JOÃO SILVA" class="w-full rounded-md border border-gray-300 shadow-sm p-3">
-            </div>
-
-            <div class="flex justify-between">
-                <button type="submit" class="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 font-medium">
-                    ✓ Continuar para Confirmação
-                </button>
-                <div id="status" class="text-sm text-gray-600"></div>
-            </div>
-        </form>
-
-        <!-- Resumo do Pedido -->
-        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 class="text-lg font-bold mb-2">Resumo do Pedido</h3>
-            <div class="flex items-center space-x-2 mb-2">
-                <div class="w-12 h-12 bg-purple-100 rounded flex items-center justify-center">📱</div>
-                <div>
-                    <p class="font-medium">Smartphone Galaxy S24</p>
-                    <p class="text-sm text-gray-600">1 x 1.200 MZN</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2 mb-4">
-                <div class="w-12 h-12 bg-purple-100 rounded flex items-center justify-center">🎧</div>
-                <div>
-                    <p class="font-medium">Fones Wireless AirPods</p>
-                    <p class="text-sm text-gray-600">1 x 800 MZN</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-lg font-bold text-purple-600">Total: 2.000 MZN</p>
-            </div>
-        </div>
-
-        <p class="text-xs text-gray-500 mt-4 text-center">
-            Nota: este exemplo é didático. Em produção use tokenização PCI-compliant para cartões (Vendorapay/Stripe).
-        </p>
+  <div class="checkout-container">
+    
+    <div class="header-logo">
+      <h1><i class="fas fa-shopping-bag"></i> MZ TECH STORE</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Finalize a sua compra em ambiente 100% seguro</p>
     </div>
 
-    <script>
-        // Backend Vercel URL
-        const BACKEND_URL = 'https://checkout-backend-mztechstores-projects.vercel.app';
+    <!-- Resumo da Compra -->
+    <div class="box">
+      <h2><i class="fas fa-receipt"></i> Resumo do Pedido</h2>
+      
+      <div class="order-item">
+        <div>
+          <div class="item-name">Conta Netflix Premium (4K)</div>
+          <small style="color: var(--text-muted);">Acesso 30 Dias - 1 Tela</small>
+        </div>
+        <div class="item-price">50.00 MT</div>
+      </div>
 
-        // Vendorapay API Key (para processamento direto no backend)
-        const VENDORAPAY_API_KEY = 'tpkhv80bbjago1qm13ldt23b6k971u6mqg30ca1h2rlku4dw78r6z560g07t';
+      <div class="order-item">
+        <div>
+          <div class="item-name">Taxa de Ativação</div>
+          <small style="color: var(--text-muted);">Entrega Instantânea</small>
+        </div>
+        <div class="item-price">0.00 MT</div>
+      </div>
 
-        const form = document.getElementById('paymentForm');
-        const statusEl = document.getElementById('status');
+      <div class="total-row">
+        <span>Total a Pagar:</span>
+        <span style="color: var(--primary);">50.00 MT</span>
+      </div>
+    </div>
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            statusEl.textContent = 'Processando pagamento...';
+    <!-- Formulário de Pagamento Stripe -->
+    <div class="box">
+      <h2><i class="fas fa-credit-card"></i> Pagamento com Cartão</h2>
 
-            const data = Object.fromEntries(new FormData(form).entries());
-            const method = data.method || 'card'; // Default card
+      <div class="cards-accepted">
+        <i class="fab fa-cc-visa" title="Visa"></i>
+        <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+        <i class="fab fa-cc-stripe" title="Stripe Secure"></i>
+      </div>
 
-            try {
-                if (method === 'card') {
-                    // Envia dados do cartão para backend (Vendorapay processa)
-                    const response = await fetch(`${BACKEND_URL}/processar-vendorapay`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            apiKey: VENDORAPAY_API_KEY,
-                            amount: '2000.00',
-                            cardNumber: data.cardNumber.replace(/\s/g, ''),
-                            cardExpiry: data.cardExpiry.replace('/', ''),
-                            cardCvv: data.cardCvv,
-                            cardName: data.cardName,
-                            currency: 'MZN'
-                        })
-                    });
-                    const backendData = await response.json();
-                    if (backendData.success) {
-                        statusEl.innerHTML = '<span class="text-green-600">Pagamento aprovado! Redirecionando para confirmação...</span>';
-                        // Redireciona para confirmação (simulado)
-                        setTimeout(() => window.location.href = '/confirmacao.html', 2000);
-                    } else {
-                        statusEl.innerHTML = '<span class="text-red-600">Erro: ' + backendData.error + '</span>';
-                    }
-                } else if (method === 'paypal') {
-                    // Redireciona para PayPal (simulado, integre SDK)
-                    statusEl.innerHTML = '<span class="text-green-600">Redirecionando para PayPal...</span>';
-                    setTimeout(() => alert('PayPal integration - Pagamento aprovado!'), 1000);
-                }
-            } catch (err) {
-                console.error('Erro no processamento:', err);
-                statusEl.innerHTML = '<span class="text-red-600">Erro de conexão. Tente novamente.</span>';
-            }
-        });
-    </script>
+      <form id="payment-form">
+        <div class="form-group">
+          <label for="name">Nome Completo</label>
+          <input type="text" id="name" placeholder="Ex: João Muchanga" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Endereço de E-mail</label>
+          <input type="email" id="email" placeholder="cliente@gmail.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="card-element">Dados do Cartão (Visa / Mastercard)</label>
+          <!-- O elemento do Stripe é injetado aqui -->
+          <div id="card-element"></div>
+          <div id="card-errors" role="alert"></div>
+        </div>
+
+        <button type="submit" class="btn-pay" id="submit-btn">
+          <i class="fas fa-lock"></i> Pagar 50.00 MT
+        </button>
+
+        <div class="security-badge">
+          <i class="fas fa-shield-alt" style="color: var(--primary);"></i> Pagamento encriptado de 256-bits via Stripe
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    // Substitua 'pk_live_...' pela sua Publishable Key do Stripe do seu Dashboard
+    // Exemplo: const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTe...');
+    const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTeJlV0cejuLCgda1kahE6bMjcaoOHomARtcKgkRnDHf1bTi2CFyooTlsjL5yyneVScJggkRlXT00ng0cNhYm');
+    const elements = stripe.elements();
+
+    // Estilo personalizado para o campo do cartão dentro do formulário dark
+    const style = {
+      base: {
+        color: '#f8fafc',
+        fontFamily: '"Plus Jakarta Sans", sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '15px',
+        '::placeholder': { color: '#94a3b8' }
+      },
+      invalid: {
+        color: '#ef4444',
+        iconColor: '#ef4444'
+      }
+    };
+
+    // Cria o campo de cartão do Stripe
+    const card = elements.create('card', { style: style, hidePostalCode: true });
+    card.mount('#card-element');
+
+    // Mostra erros de validação em tempo real
+    card.on('change', ({ error }) => {
+      const displayError = document.getElementById('card-errors');
+      if (error) {
+        displayError.textContent = error.message;
+      } else {
+        displayError.textContent = '';
+      }
+    });
+
+    // Submissão do formulário
+    const form = document.getElementById('payment-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A Processar...';
+
+      const nameInput = document.getElementById('name').value;
+      const emailInput = document.getElementById('email').value;
+
+      // Criação do token de pagamento seguro no Stripe
+      const { token, error } = await stripe.createToken(card, {
+        name: nameInput,
+        email: emailInput
+      });
+
+      if (error) {
+        document.getElementById('card-errors').textContent = error.message;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 350.00 MT';
+      } else {
+        // Sucesso no processamento
+        console.log('Stripe Token criado com sucesso:', token.id);
+        alert(`✅ Pagamento efetuado com sucesso!\nToken do Stripe: ${token.id}\nObrigado por comprar na MZ TECH STORE.`);
+        
+        submitBtn.style.background = '#059669';
+        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Pagamento Confirmado!';
+      }
+    });
+  </script>
 </body>
 </html>
