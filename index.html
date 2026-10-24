@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MZ TECH STORE | Checkout Seguro</title>
   
-  <!-- Font Awesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Stripe JS SDK Oficial -->
   <script src="https://js.stripe.com/v3/"></script>
 
   <style>
@@ -18,7 +15,6 @@
       --card-bg: #1e293b;
       --primary: #10b981;
       --primary-hover: #059669;
-      --accent: #6366f1;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border: rgba(255, 255, 255, 0.1);
@@ -38,33 +34,23 @@
     h2 { font-size: 1.2rem; color: #fff; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
     h2 i { color: var(--primary); }
 
-    /* Resumo do Pedido */
     .order-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
-    .order-item:last-child { border-bottom: none; }
     .item-name { font-weight: 600; font-size: 0.95rem; }
     .item-price { color: var(--primary); font-weight: 700; }
     .total-row { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed var(--border); color: #fff; }
 
-    /* Form do Cartão */
     .form-group { margin-bottom: 1.2rem; }
     label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
     input { width: 100%; padding: 0.8rem 1rem; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.95rem; outline: none; }
     input:focus { border-color: var(--primary); }
 
-    /* Estilo do Campo do Stripe */
     #card-element { background: #0f172a; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--border); }
-    #card-element.StripeElement--focus { border-color: var(--primary); }
-
-    .cards-accepted { display: flex; gap: 0.8rem; margin-bottom: 1rem; font-size: 1.5rem; color: var(--text-muted); }
-    .cards-accepted i { transition: color 0.2s; }
-    .cards-accepted i:hover { color: var(--primary); }
-
+    
     .btn-pay { width: 100%; background: var(--primary); color: #fff; border: none; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: background 0.2s; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; }
     .btn-pay:hover { background: var(--primary-hover); }
     .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
 
     #card-errors { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; }
-    .security-badge { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; display: flex; justify-content: center; align-items: center; gap: 0.4rem; }
   </style>
 </head>
 <body>
@@ -73,27 +59,19 @@
     
     <div class="header-logo">
       <h1><i class="fas fa-shopping-bag"></i> MZ TECH STORE</h1>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Finalize a sua compra em ambiente 100% seguro</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Subscrição Segura</p>
     </div>
 
-    <!-- Resumo da Compra -->
+    <!-- Resumo do Pedido -->
     <div class="box">
-      <h2><i class="fas fa-receipt"></i> Resumo do Pedido</h2>
+      <h2><i class="fas fa-receipt"></i> Resumo da Subscrição</h2>
       
       <div class="order-item">
         <div>
-          <div class="item-name">Acesso VIP / Serviço MZ TECH</div>
-          <small style="color: var(--text-muted);">Ativação Instantânea</small>
+          <div class="item-name">Plano VIP MZ TECH</div>
+          <small style="color: var(--text-muted);">Acesso Mensal</small>
         </div>
         <div class="item-price">50.00 MT</div>
-      </div>
-
-      <div class="order-item">
-        <div>
-          <div class="item-name">Taxa de Processamento</div>
-          <small style="color: var(--text-muted);">Incluído</small>
-        </div>
-        <div class="item-price">0.00 MT</div>
       </div>
 
       <div class="total-row">
@@ -102,29 +80,23 @@
       </div>
     </div>
 
-    <!-- Formulário de Pagamento Stripe -->
+    <!-- Formulário -->
     <div class="box">
-      <h2><i class="fas fa-credit-card"></i> Pagamento com Cartão</h2>
-
-      <div class="cards-accepted">
-        <i class="fab fa-cc-visa" title="Visa"></i>
-        <i class="fab fa-cc-mastercard" title="Mastercard"></i>
-        <i class="fab fa-cc-stripe" title="Stripe Secure"></i>
-      </div>
+      <h2><i class="fas fa-credit-card"></i> Dados de Pagamento</h2>
 
       <form id="payment-form">
         <div class="form-group">
           <label for="name">Nome Completo</label>
-          <input type="text" id="name" placeholder="Ex: João Muchanga" required>
+          <input type="text" id="name" placeholder="Ex: João Veloso" required>
         </div>
 
         <div class="form-group">
-          <label for="email">Endereço de E-mail</label>
-          <input type="email" id="email" placeholder="cliente@gmail.com" required>
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="netmovie450@gmail.com" required>
         </div>
 
         <div class="form-group">
-          <label for="card-element">Dados do Cartão (Visa / Mastercard)</label>
+          <label for="card-element">Cartão de Crédito / Débito</label>
           <div id="card-element"></div>
           <div id="card-errors" role="alert"></div>
         </div>
@@ -132,47 +104,21 @@
         <button type="submit" class="btn-pay" id="submit-btn">
           <i class="fas fa-lock"></i> Pagar 50.00 MT
         </button>
-
-        <div class="security-badge">
-          <i class="fas fa-shield-alt" style="color: var(--primary);"></i> Pagamento encriptado de 256-bits via Stripe
-        </div>
       </form>
     </div>
 
   </div>
 
   <script>
-    // Baro a Publishable Key para ti Stripe
-    const STRIPE_PUBLISHABLE_KEY = 'pk_live_51UT9bdRpwlS3XQTecBTV1tZtosUv9fKZuGTDpWm7YXCvGes6kNJSDA0IZw0DrQasDuOhV5iCfdXgxCbBbr3KlpPc00G2piElQn';
-    
-    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTecBTV1tZtosUv9fKZuGTDpWm7YXCvGes6kNJSDA0IZw0DrQasDuOhV5iCfdXgxCbBbr3KlpPc00G2piElQn');
     const elements = stripe.elements();
-
-    const style = {
-      base: {
-        color: '#f8fafc',
-        fontFamily: '"Plus Jakarta Sans", sans-serif',
-        fontSmoothing: 'antialiased',
-        fontSize: '15px',
-        '::placeholder': { color: '#94a3b8' }
-      },
-      invalid: {
-        color: '#ef4444',
-        iconColor: '#ef4444'
-      }
-    };
-
-    const card = elements.create('card', { style: style, hidePostalCode: true });
-    card.mount('#card-element');
-
-    card.on('change', ({ error }) => {
-      const displayError = document.getElementById('card-errors');
-      if (error) {
-        displayError.textContent = error.message;
-      } else {
-        displayError.textContent = '';
+    const card = elements.create('card', {
+      style: {
+        base: { color: '#f8fafc', fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '15px', '::placeholder': { color: '#94a3b8' } },
+        invalid: { color: '#ef4444' }
       }
     });
+    card.mount('#card-element');
 
     const form = document.getElementById('payment-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -182,12 +128,14 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A Processar...';
 
-      const nameInput = document.getElementById('name').value;
-      const emailInput = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
 
-      const { token, error } = await stripe.createToken(card, {
-        name: nameInput,
-        email: emailInput
+      // Cria o método de pagamento no Stripe com os dados do cartão inseridos pelo utilizador
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: card,
+        billing_details: { name: name, email: email },
       });
 
       if (error) {
@@ -195,9 +143,28 @@
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 50.00 MT';
       } else {
-        alert(`✅ Pagamento efetuado com sucesso!\nToken do Stripe: ${token.id}\nObrigado por comprar na MZ TECH STORE.`);
-        submitBtn.style.background = '#059669';
-        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Pagamento Confirmado!';
+        // Envia o paymentMethod.id para o servidor criar a subscrição com o preço price_1UUCqNRpwlS3XQTeWoAIbgXH
+        try {
+          const response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, paymentMethodId: paymentMethod.id })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert('✅ Subscrição ativada com sucesso!');
+            submitBtn.style.background = '#059669';
+            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Subscrito com Sucesso!';
+          } else {
+            throw new Error(result.error || 'Erro ao processar subscrição.');
+          }
+        } catch (err) {
+          document.getElementById('card-errors').textContent = err.message;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 50.00 MT';
+        }
       }
     });
   </script>
