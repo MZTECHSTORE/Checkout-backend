@@ -1,106 +1,87 @@
-// server.js - Backend Node.js completo para recebimento PayPal + Vendorapay
-// Dependências: npm install express @paypal/checkout-server-sdk dotenv cors axios
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const paypal = require('@paypal/checkout-server-sdk');
-const axios = require('axios');
+const Stripe = require('stripe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Configuração do Stripe com a Secret Key do ambiente ou fallback direto
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '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';
+const stripe = Stripe(stripeSecretKey);
+
+// Middlewares
+app.use(cors());
 app.use(express.json());
-app.use(cors({ origin: '*' }));
+app.use(express.static('public')); // Serve os ficheiros estáticos (checkout.html)
 
-// Configuração PayPal
-const environment = process.env.PAYPAL_MODE === 'live' 
-    ? new paypal.core.LiveEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_SECRET_ID)
-    : new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_SECRET_ID);
+// ==========================================
+// ROTA PRINCIPAL DE CHECKOUT (STRIPE)
+// ==========================================
+app.post('/api/checkout', async (req, res) => {
+  try {
+    const { amount, currency, email, name, description } = req.body;
 
-const client = new paypal.core.PayPalHttpClient(environment);
-
-// Rota raiz
-app.get('/', (req, res) => {
-    res.json({ 
-        message: 'Backend MZ TECH STORE OK - PayPal + Vendorapay configurado',
-        endpoints: {
-            health: '/health',
-            paypal: '/capturar-pagamento (POST)',
-            vendorapay: '/processar-vendorapay (POST)'
-        },
-        mode: process.env.PAYPAL_MODE || 'sandbox'
+    // Criar o Payment Intent no Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount || 35000, // Valor em cêntimos/unidades mínimas (ex:50.00 MT = 5000)
+      currency: currency || 'mzn',
+      receipt_email: email,
+      description: description || 'Compra na MZ TECH STORE',
+      metadata: {
+        cliente_nome: name || 'Cliente MZ TECH STORE',
+        plataforma: 'MZ TECH STORE Web'
+      },
+      payment_method_types: ['card'] // Aceita Visa, Mastercard, etc.
     });
+
+    // Devolve o clientSecret necessário para o frontend confirmar o pagamento
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      id: paymentIntent.id
+    });
+  } catch (error) {
+    console.error('Erro ao criar Intent de Pagamento:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Endpoint PayPal (mantido)
-app.post('/capturar-pagamento', async (req, res) => {
-    const { orderID } = req.body;
-    if (!orderID) return res.status(400).json({ error: 'orderID é obrigatório' });
+// ==========================================
+// WEBHOOK DO STRIPE (Confirmação de Pagamento)
+// ==========================================
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    const request = new paypal.orders.OrdersCaptureRequest(orderID);
-    request.requestBody({});
+  let event;
 
-    try {
-        const capture = await client.execute(request);
-        if (capture.statusCode === 201) {
-            res.json({ success: true, details: capture.result, message: 'Pagamento PayPal recebido!' });
-        } else {
-            res.status(400).json({ error: 'Falha na captura', details: capture });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+  try {
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      event = JSON.parse(req.body);
     }
+  } catch (err) {
+    console.error(`Erro de validação no Webhook: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Notificação de pagamento concluído com sucesso
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    console.log(`✅ Pagamento confirmado com sucesso para MZ TECH STORE! ID: ${paymentIntent.id}`);
+    // Aqui pode adicionar a lógica para libertar a conta/produto ao cliente
+  }
+
+  res.json({ received: true });
 });
 
-// Novo Endpoint Vendorapay (Processamento Direto com Credenciais)
-app.post('/processar-vendorapay', async (req, res) => {
-    const { apiKey, amount, cardNumber, cardExpiry, cardCvv, cardName, currency = 'MZN' } = req.body;
-
-    if (!apiKey || !amount || !cardNumber || !cardExpiry || !cardCvv || !cardName) {
-        return res.status(400).json({ error: 'Dados obrigatórios faltando' });
-    }
-
-    const VENDORAPAY_URL = 'https://vendorapay.com/api/payment/process'; // Endpoint para charge direto
-    const headers = {
-        'apiKey': apiKey,
-        'Content-Type': 'application/json'
-    };
-    const payload = {
-        amount: amount,
-        currency: currency,
-        cardNumber: cardNumber.replace(/\s/g, ''), // Limpa espaços
-        cardExpiry: cardExpiry.replace('/', ''), // Limpa /
-        cardCvv: cardCvv,
-        cardName: cardName,
-        enviroment: 'prod'
-    };
-
-    try {
-        console.log('Processando Vendorapay:', payload);
-        const response = await axios.post(VENDORAPAY_URL, payload, { headers });
-        const data = response.data;
-
-        if (data.success) {
-            res.json({ success: true, message: 'Pagamento Vendorapay recebido!', transactionId: data.transactionId });
-        } else {
-            res.status(400).json({ error: data.error || 'Falha no processamento Vendorapay' });
-        }
-    } catch (err) {
-        console.error('Erro Vendorapay:', err.response?.data || err.message);
-        res.status(500).json({ error: err.response?.data?.error || 'Erro de conexão Vendorapay' });
-    }
-});
-
-// Health
+// Rota de teste simples
 app.get('/health', (req, res) => {
-    res.json({ status: 'Servidor rodando - PayPal + Vendorapay OK', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', message: 'Servidor de Checkout MZ TECH STORE a funcionar!' });
 });
 
+// Inicialização do Servidor
 app.listen(PORT, () => {
-    console.log(`Servidor na porta ${PORT}`);
-    console.log(`Modo PayPal: ${process.env.PAYPAL_MODE || 'sandbox'}`);
+  console.log(`🚀 Servidor de Checkout MZ TECH STORE ativo na porta ${PORT}`);
 });
-
-module.exports = app;
