@@ -1,172 +1,414 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT" class="h-full bg-slate-950 text-slate-100">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MZ TECH STORE | Checkout Seguro</title>
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://js.stripe.com/v3/"></script>
-
-  <style>
-    :root {
-      --bg-dark: #0f172a;
-      --card-bg: #1e293b;
-      --primary: #10b981;
-      --primary-hover: #059669;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.1);
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding: 2rem 1rem; line-height: 1.5; }
-
-    .checkout-container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-    @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
-
-    .header-logo { grid-column: 1 / -1; text-align: center; margin-bottom: 1rem; }
-    .header-logo h1 { color: var(--primary); font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-
-    .box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; }
-    h2 { font-size: 1.2rem; color: #fff; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
-    h2 i { color: var(--primary); }
-
-    .order-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
-    .item-name { font-weight: 600; font-size: 0.95rem; }
-    .item-price { color: var(--primary); font-weight: 700; }
-    .total-row { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed var(--border); color: #fff; }
-
-    .form-group { margin-bottom: 1.2rem; }
-    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
-    input { width: 100%; padding: 0.8rem 1rem; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.95rem; outline: none; }
-    input:focus { border-color: var(--primary); }
-
-    #card-element { background: #0f172a; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--border); }
-    
-    .btn-pay { width: 100%; background: var(--primary); color: #fff; border: none; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: background 0.2s; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; }
-    .btn-pay:hover { background: var(--primary-hover); }
-    .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    #card-errors { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; }
-  </style>
-</head>
-<body>
-
-  <div class="checkout-container">
-    
-    <div class="header-logo">
-      <h1><i class="fas fa-shopping-bag"></i> MZ TECH STORE</h1>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">Subscrição Segura</p>
-    </div>
-
-    <!-- Resumo do Pedido -->
-    <div class="box">
-      <h2><i class="fas fa-receipt"></i> Resumo da Subscrição</h2>
-      
-      <div class="order-item">
-        <div>
-          <div class="item-name">Plano VIP MZ TECH</div>
-          <small style="color: var(--text-muted);">Acesso Mensal</small>
-        </div>
-        <div class="item-price">50.00 MT</div>
-      </div>
-
-      <div class="total-row">
-        <span>Total a Pagar:</span>
-        <span style="color: var(--primary);">50.00 MT</span>
-      </div>
-    </div>
-
-    <!-- Formulário -->
-    <div class="box">
-      <h2><i class="fas fa-credit-card"></i> Dados de Pagamento</h2>
-
-      <form id="payment-form">
-        <div class="form-group">
-          <label for="name">Nome Completo</label>
-          <input type="text" id="name" placeholder="Ex: João Veloso" required>
-        </div>
-
-        <div class="form-group">
-          <label for="email">E-mail</label>
-          <input type="email" id="email" placeholder="netmovie450@gmail.com" required>
-        </div>
-
-        <div class="form-group">
-          <label for="card-element">Cartão de Crédito / Débito</label>
-          <div id="card-element"></div>
-          <div id="card-errors" role="alert"></div>
-        </div>
-
-        <button type="submit" class="btn-pay" id="submit-btn">
-          <i class="fas fa-lock"></i> Pagar 50.00 MT
-        </button>
-      </form>
-    </div>
-
-  </div>
-
-  <script>
-    const stripe = Stripe('pk_live_51UT9bdRpwlS3XQTecBTV1tZtosUv9fKZuGTDpWm7YXCvGes6kNJSDA0IZw0DrQasDuOhV5iCfdXgxCbBbr3KlpPc00G2piElQn');
-    const elements = stripe.elements();
-    const card = elements.create('card', {
-      style: {
-        base: { color: '#f8fafc', fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '15px', '::placeholder': { color: '#94a3b8' } },
-        invalid: { color: '#ef4444' }
-      }
-    });
-    card.mount('#card-element');
-
-    const form = document.getElementById('payment-form');
-    const submitBtn = document.getElementById('submit-btn');
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A Processar...';
-
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
-
-      // Cria o método de pagamento no Stripe com os dados do cartão inseridos pelo utilizador
-      const { paymentMethod, error } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: card,
-        billing_details: { name: name, email: email },
-      });
-
-      if (error) {
-        document.getElementById('card-errors').textContent = error.message;
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 50.00 MT';
-      } else {
-        // Envia o paymentMethod.id para o servidor criar a subscrição com o preço price_1UUCqNRpwlS3XQTeWoAIbgXH
-        try {
-          const response = await fetch('/api/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, paymentMethodId: paymentMethod.id })
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            alert('✅ Subscrição ativada com sucesso!');
-            submitBtn.style.background = '#059669';
-            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Subscrito com Sucesso!';
-          } else {
-            throw new Error(result.error || 'Erro ao processar subscrição.');
-          }
-        } catch (err) {
-          document.getElementById('card-errors').textContent = err.message;
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-lock"></i> Pagar 50.00 MT';
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Seguro - Pacote Preview</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        coinbase: {
+                            blue: '#0052FF',
+                            hover: '#0045D8'
+                        }
+                    }
+                }
+            }
         }
-      }
-    });
-  </script>
+    </script>
+    <style>
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Header Principal -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-[#0052FF] fa-shield-halved text-white text-lg"></i>
+                </div>
+                <span class="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    PayShield <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-2">USDC Secure</span>
+                </span>
+            </div>
+            <div class="flex items-center space-x-4 text-xs sm:text-sm text-slate-400">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-400"></i> Encriptação 256-bit</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Coluna Esquerda: Resumo do Pedido -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-blue-400"></i> Resumo da Compra
+                    </h2>
+
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-slate-900/80 border border-slate-800 mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                <i class="fa-solid fa-box-open text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-white">Pacote Preview</h3>
+                                <p class="text-xs text-slate-400">Acesso imediato ao conteúdo digital</p>
+                            </div>
+                        </div>
+                        <span class="text-right font-semibold text-emerald-400 font-mono text-base">0.80 USDC</span>
+                    </div>
+
+                    <div class="space-y-3 text-sm text-slate-300 border-t border-slate-800 pt-4">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Subtotal</span>
+                            <span class="font-mono">0.80 USDC</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Taxa de Rede (Gas Fee)</span>
+                            <span class="text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">Grátis (Patrocinado)</span>
+                        </div>
+                        <div class="border-t border-slate-800 pt-3 flex justify-between items-center">
+                            <span class="font-semibold text-white">Total a Pagar</span>
+                            <div class="text-right">
+                                <span class="text-2xl font-bold text-white font-mono">0.80</span>
+                                <span class="text-xs text-blue-400 font-semibold ml-1">USDC</span>
+                                <p class="text-[10px] text-slate-400 font-normal">≈ $0.80 USD</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Garantias -->
+                    <div class="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-2 gap-3">
+                        <div class="flex items-center gap-2 text-xs text-slate-400">
+                            <i class="fa-solid fa-[#0052FF] fa-[#0052FF] fa-bolt text-amber-400"></i>
+                            <span>Ativação Instantânea</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-400">
+                            <i class="fa-solid fa-[#0052FF] fa-shield-cat text-blue-400"></i>
+                            <span>Liquidado na Coinbase</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selos de Segurança -->
+                <div class="flex items-center justify-center gap-6 opacity-75 grayscale hover:grayscale-0 transition-all duration-300">
+                    <i class="fa-brands fa-cc-visa text-3xl text-slate-300"></i>
+                    <i class="fa-brands fa-cc-mastercard text-3xl text-slate-300"></i>
+                    <i class="fa-solid fa-[#0052FF] fa-bitcoin-sign text-2xl text-slate-300"></i>
+                    <i class="fa-solid fa-[#0052FF] fa-lock text-xl text-slate-300"></i>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Opções de Pagamento -->
+            <div class="lg:col-span-7">
+                <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl">
+
+                    <!-- Seleção de Método de Pagamento (Tabs) -->
+                    <div class="mb-6">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Selecione o Método de Pagamento</label>
+                        <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-900/90 rounded-xl border border-slate-800">
+                            <button type="button" id="tab-card" onclick="switchTab('card')" 
+                                class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30">
+                                <i class="fa-solid fa-[#0052FF] fa-credit-card"></i> Cartão Visa/Mastercard
+                            </button>
+                            <button type="button" id="tab-coinbase" onclick="switchTab('coinbase')" 
+                                class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                                <i class="fa-brands fa-bitcoin text-amber-400"></i> Coinbase Crypto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form de Cartão de Crédito -->
+                    <form id="payment-form-card" class="space-y-4" onsubmit="handlePaymentSubmit(event, 'card')">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-medium text-slate-300">Nome no Cartão</label>
+                            <div class="relative">
+                                <input type="text" required id="card-name" placeholder="Ex: JOAO A SILVA" 
+                                    class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all uppercase">
+                                <i class="fa-solid fa-user absolute right-3.5 top-3.5 text-slate-500 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-medium text-slate-300">Número do Cartão</label>
+                            <div class="relative">
+                                <input type="text" id="card-number" maxlength="19" required placeholder="0000 0000 0000 0000" 
+                                    oninput="formatCardNumber(this)"
+                                    class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                                <div id="card-brand-icon" class="absolute right-3.5 top-3 text-slate-400 text-lg">
+                                    <i class="fa-solid fa-[#0052FF] fa-credit-card"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-medium text-slate-300">Validade</label>
+                                <input type="text" id="card-expiry" maxlength="5" required placeholder="MM/AA" 
+                                    oninput="formatExpiry(this)"
+                                    class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-xs font-medium text-slate-300">CVV / CVC</label>
+                                <div class="relative">
+                                    <input type="password" id="card-cvv" maxlength="4" required placeholder="123" 
+                                        class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center">
+                                    <i class="fa-solid fa-circle-question absolute right-3 top-3.5 text-slate-500 text-xs" title="Código de 3 ou 4 dígitos no verso do cartão"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" id="btn-submit-card" 
+                                class="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2">
+                                <span>Pagar 0.80 USDC com Cartão</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Opção Coinbase Crypto -->
+                    <div id="payment-form-coinbase" class="hidden space-y-6">
+                        <div class="p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-sm text-blue-200 space-y-2">
+                            <div class="flex items-center gap-2 font-medium">
+                                <i class="fa-solid fa-[#0052FF] fa-circle-info text-blue-400"></i>
+                                <span>Pagamento Direto Via Coinbase Commerce</span>
+                            </div>
+                            <p class="text-xs text-slate-300">
+                                Conecte sua carteira ou pague via QR Code diretamente com USDC na rede Ethereum, Polygon ou Base.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/40 space-y-4">
+                            <div class="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-500 text-3xl">
+                                <i class="fa-solid fa-[#0052FF] fa-qrcode"></i>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-sm font-semibold text-white">Checkout Instantâneo Coinbase</h4>
+                                <p class="text-xs text-slate-400 mt-1">Clique abaixo para gerar a transação de 0.80 USDC</p>
+                            </div>
+                            
+                            <button type="button" onclick="handlePaymentSubmit(event, 'coinbase')" id="btn-submit-coinbase"
+                                class="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-coinbase-blue hover:bg-coinbase-hover active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                                <i class="fa-brands fa-bitcoin text-lg"></i>
+                                <span>Pagar 0.80 USDC com Coinbase</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rodapé de Proteção -->
+                    <div class="mt-6 text-center text-[11px] text-slate-500 space-y-1">
+                        <p><i class="fa-solid fa-shield-halved text-emerald-500"></i> Os pagamentos são processados de forma segura e convertidos diretamente para USDC via Coinbase API.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Painel Técnico de Integração API (Expansível) -->
+        <div class="mt-12">
+            <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+                <button type="button" onclick="toggleDevPanel()" class="w-full px-6 py-4 text-left font-medium text-sm text-slate-300 hover:bg-slate-800/40 flex items-center justify-between transition-all">
+                    <span class="flex items-center gap-2 font-mono text-xs text-blue-400">
+                        <i class="fa-solid fa-code"></i> Configuração Desenvolvedor (Coinbase API Credentials)
+                    </span>
+                    <i id="dev-chevron" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform"></i>
+                </button>
+                
+                <div id="dev-panel-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4">
+                    <p class="text-xs text-slate-400">
+                        Chaves de API configuradas para liquidação automática na conta Coinbase:
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Organization API Key ID</label>
+                            <input type="text" readonly value="organizations/1bd07b50-bcf2-4847-923c-17fbdd7722c5/apiKeys/e96982b0-53f5-4444-8836-306de5954eb1" 
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-blue-300 select-all">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Private Key (Mascara por Segurança)</label>
+                            <input type="password" readonly value="XxEpG7hBmGf6Xxk28DRCkDm0NY61ChrefX1OLqzPyITBanvLvbMDDm+4qEiRrivnLzozM9FAL5xJGN21qS/ChA==" 
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-emerald-400 select-all">
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-900/90 rounded-lg border border-slate-800 text-xs font-mono text-slate-400 overflow-x-auto">
+                        <span class="text-slate-500">// Exemplo de payload enviado ao Webhook / Backend</span><br>
+                        <span class="text-indigo-400">POST</span> /api/v1/checkout/charge<br>
+                        {<br>
+                        &nbsp;&nbsp;<span class="text-blue-400">"amount"</span>: <span class="text-emerald-400">"0.80"</span>,<br>
+                        &nbsp;&nbsp;<span class="text-blue-400">"currency"</span>: <span class="text-emerald-400">"USDC"</span>,<br>
+                        &nbsp;&nbsp;<span class="text-blue-400">"product"</span>: <span class="text-emerald-400">"Pacote Preview"</span>,<br>
+                        &nbsp;&nbsp;<span class="text-blue-400">"settlement_provider"</span>: <span class="text-emerald-400">"COINBASE_COMMERCE"</span><br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Sucesso (Oculto por Padrão) -->
+    <div id="modal-success" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-2xl p-6 text-center space-y-5 border border-emerald-500/30 shadow-2xl animate-fade-in">
+            <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            
+            <div class="space-y-1">
+                <h3 class="text-xl font-bold text-white">Pagamento Confirmado!</h3>
+                <p class="text-xs text-slate-400">O seu pedido do <strong>Pacote Preview</strong> foi processado com sucesso.</p>
+            </div>
+
+            <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 text-left space-y-2 text-xs font-mono">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Valor Pago:</span>
+                    <span class="text-emerald-400 font-bold">0.80 USDC</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">ID da Transação:</span>
+                    <span class="text-slate-300">tx_cb_9f82a17b4c</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Status na Rede:</span>
+                    <span class="text-blue-400">Confirmed (Coinbase API)</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="closeSuccessModal()" 
+                class="w-full py-3 px-4 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20">
+                Aceder ao Pacote Preview
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Alternar entre Cartão e Coinbase Crypto
+        function switchTab(type) {
+            const cardTab = document.getElementById('tab-card');
+            const coinbaseTab = document.getElementById('tab-coinbase');
+            const cardForm = document.getElementById('payment-form-card');
+            const coinbaseForm = document.getElementById('payment-form-coinbase');
+
+            if (type === 'card') {
+                cardTab.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                coinbaseTab.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                cardForm.classList.remove('hidden');
+                coinbaseForm.classList.add('hidden');
+            } else {
+                coinbaseTab.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all bg-coinbase-blue text-white shadow-lg shadow-blue-500/30";
+                cardTab.className = "flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                coinbaseForm.classList.remove('hidden');
+                cardForm.classList.add('hidden');
+            }
+        }
+
+        // Formatar número de cartão
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = value.replace(/(.{4})/g, '$1 ').trim();
+            input.value = value;
+
+            // Identificar bandeira
+            const iconContainer = document.getElementById('card-brand-icon');
+            const cleanVal = value.replace(/\s+/g, '');
+            
+            if (/^4/.test(cleanVal)) {
+                iconContainer.innerHTML = '<i class="fa-brands fa-cc-visa text-blue-400 text-xl"></i>';
+            } else if (/^5[1-5]/.test(cleanVal) || /^2[2-7]/.test(cleanVal)) {
+                iconContainer.innerHTML = '<i class="fa-brands fa-cc-mastercard text-orange-400 text-xl"></i>';
+            } else {
+                iconContainer.innerHTML = '<i class="fa-solid fa-credit-card text-slate-500"></i>';
+            }
+        }
+
+        // Formatar Validade MM/AA
+        function formatExpiry(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            input.value = value;
+        }
+
+        // Simulação de Submissão de Pagamento
+        function handlePaymentSubmit(event, type) {
+            event.preventDefault();
+
+            const btn = type === 'card' ? document.getElementById('btn-submit-card') : document.getElementById('btn-submit-coinbase');
+            const originalText = btn.innerHTML;
+
+            // Animação de Carregamento
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> <span>A Processar via Coinbase...</span>`;
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.getElementById('modal-success').classList.remove('hidden');
+            }, 2000);
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('modal-success').classList.add('hidden');
+        }
+
+        // Painel Dev Toggle
+        function toggleDevPanel() {
+            const panel = document.getElementById('dev-panel-content');
+            const chevron = document.getElementById('dev-chevron');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                panel.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+    </script>
 </body>
 </html>
