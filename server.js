@@ -1,56 +1,90 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const Stripe = require('stripe');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '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';
-const stripe = Stripe(stripeSecretKey);
-
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
-app.post('/api/checkout', async (req, res) => {
-  try {
-    const { name, email, paymentMethodId } = req.body;
+const KEY_NAME = process.env.COINBASE_KEY_NAME;
+const PRIVATE_KEY = process.env.COINBASE_PRIVATE_KEY;
 
-    const customer = await stripe.customers.create({
-      name: name,
-      email: email,
-      payment_method: paymentMethodId,
-      invoice_settings: {
-        default_payment_method: paymentMethodId,
-      },
+// Função para gerar JWT de autenticação oficial da Coinbase CDP
+function generateCoinbaseToken(requestMethod, requestPath) {
+    const uri = `${requestMethod} api.cdp.coinbase.com${requestPath}`;
+    const payload = {
+        iss: 'cdp',
+        nbf: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 120,
+        sub: KEY_NAME,
+        uri: uri,
+    };
+
+    return jwt.sign(payload, PRIVATE_KEY, {
+        algorithm: 'ES256',
+        header: {
+            kid: KEY_NAME,
+            nonce: crypto.randomBytes(16).toString('hex')
+        }
     });
+}
 
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: 'price_1UUCqNRpwlS3XQTeWoAIbgXH' }],
-      expand: ['latest_invoice.payment_intent'],
-      off_session: true,
-      payment_behavior: 'error_if_incomplete',
-      proration_behavior: 'none',
-    });
+// Endpoint para gerar a cobrança de 0.80 USDC
+app.post('/api/create-crypto-charge', async (req, res) => {
+    try {
+        const path = '/v1/checkouts';
+        const token = generateCoinbaseToken('POST', path);
 
-    const invoice = subscription.latest_invoice;
-    const paymentIntent = invoice ? invoice.payment_intent : null;
+        const response = await fetch('https://business.coinbase.com/api/v1/checkouts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                amount: "0.80",
+                currency: "USDC",
+                description: "Pacote Preview - Liberação Imediata",
+                redirect_url: "https://seusite.com/sucesso"
+            })
+        });
 
-    res.json({
-      success: true,
-      subscriptionId: subscription.id,
-      status: subscription.status,
-      clientSecret: paymentIntent ? paymentIntent.client_secret : null
-    });
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao gerar cobrança');
+        }
 
-  } catch (error) {
-    console.error('Erro ao processar subscrição no Stripe:', error);
-    res.status(500).json({ error: error.message });
-  }
+        res.json({
+            success: true,
+            checkout_url: data.checkout_url || data.hosted_url,
+            checkout_id: data.id
+        });
+
+    } catch (error) {
+        console.error('Erro na Coinbase:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor MZ TECH STORE a correr na porta ${PORT}`);
+// Endpoint para simular/processar Cartão de Crédito
+app.post('/api/process-card', async (req, res) => {
+    const { number, exp, cvc, name } = req.body;
+
+    // Em produção real, você envia os dados para o Gateway do Stripe / Mercado Pago
+    if (number && exp && cvc) {
+        return res.json({
+            success: true,
+            transaction_id: 'TX-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+            status: 'approved',
+            amount: '0.80 USDC'
+        });
+    }
+
+    res.status(400).json({ success: false, message: 'Dados do cartão inválidos.' });
+});
+
+app.listen(3000, () => {
+    console.log('Servidor de Checkout rodando na porta 3000');
 });
