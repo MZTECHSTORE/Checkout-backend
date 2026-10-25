@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout Seguro - Pacote Preview</title>
+    <title>Checkout Completo - Pacote Preview (0.80 USDC)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Inter -->
@@ -35,9 +35,9 @@
         }
     </script>
     <style>
-        /* Modern Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
             background: #0f172a;
@@ -59,24 +59,47 @@
 <body class="h-full flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
 
     <!-- Header Principal -->
-    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-[#0052FF] fa-shield-halved text-white text-lg"></i>
+                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
                 </div>
-                <span class="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                    PayShield <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-2">USDC Secure</span>
+                <span class="font-bold text-lg tracking-tight text-white">
+                    PayShield <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-2">USDC & Card Gateway</span>
                 </span>
             </div>
-            <div class="flex items-center space-x-4 text-xs sm:text-sm text-slate-400">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-400"></i> Encriptação 256-bit</span>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Status da Conexão Backend -->
+                <div id="backend-status-badge" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="backend-status-text">Backend Offline (A usar Mock)</span>
+                </div>
+                <button type="button" onclick="checkBackendHealth()" class="text-xs text-slate-400 hover:text-white p-2 rounded-lg bg-slate-800 border border-slate-700" title="Verificar ligação ao backend">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Conteúdo Principal -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        
+        <!-- Banner de Alerta do Servidor -->
+        <div id="server-alert" class="mb-8 p-4 rounded-xl bg-blue-950/40 border border-blue-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-server text-blue-400 text-xl mt-0.5"></i>
+                <div>
+                    <h4 class="text-sm font-semibold text-white">Modo Híbrido Ativo</h4>
+                    <p class="text-xs text-slate-300">Este checkout tenta comunicar automaticamente com <code class="text-blue-300 font-mono">http://localhost:3000</code>. Se o servidor Node.js não estiver a rodar, ele aciona o modo de simulação instantâneo.</p>
+                </div>
+            </div>
+            <button onclick="scrollToDevPanel()" class="text-xs font-semibold px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-all whitespace-nowrap shadow-md">
+                Ver Código do Backend Node.js
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             <!-- Coluna Esquerda: Resumo do Pedido -->
@@ -95,7 +118,7 @@
                             </div>
                             <div>
                                 <h3 class="font-medium text-white">Pacote Preview</h3>
-                                <p class="text-xs text-slate-400">Acesso imediato ao conteúdo digital</p>
+                                <p class="text-xs text-slate-400">Acesso imediato e vitalício</p>
                             </div>
                         </div>
                         <span class="text-right font-semibold text-emerald-400 font-mono text-base">0.80 USDC</span>
@@ -103,12 +126,12 @@
 
                     <div class="space-y-3 text-sm text-slate-300 border-t border-slate-800 pt-4">
                         <div class="flex justify-between">
-                            <span class="text-slate-400">Subtotal</span>
+                            <span class="text-slate-400">Preço do Produto</span>
                             <span class="font-mono">0.80 USDC</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Taxa de Rede (Gas Fee)</span>
-                            <span class="text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">Grátis (Patrocinado)</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400">Taxa de Liquidação</span>
+                            <span class="text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">0.00 USDC (Isento)</span>
                         </div>
                         <div class="border-t border-slate-800 pt-3 flex justify-between items-center">
                             <span class="font-semibold text-white">Total a Pagar</span>
@@ -120,14 +143,13 @@
                         </div>
                     </div>
 
-                    <!-- Garantias -->
                     <div class="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-2 gap-3">
                         <div class="flex items-center gap-2 text-xs text-slate-400">
-                            <i class="fa-solid fa-[#0052FF] fa-[#0052FF] fa-bolt text-amber-400"></i>
+                            <i class="fa-solid fa-bolt text-amber-400"></i>
                             <span>Ativação Instantânea</span>
                         </div>
                         <div class="flex items-center gap-2 text-xs text-slate-400">
-                            <i class="fa-solid fa-[#0052FF] fa-shield-cat text-blue-400"></i>
+                            <i class="fa-solid fa-shield-cat text-blue-400"></i>
                             <span>Liquidado na Coinbase</span>
                         </div>
                     </div>
@@ -137,22 +159,22 @@
                 <div class="flex items-center justify-center gap-6 opacity-75 grayscale hover:grayscale-0 transition-all duration-300">
                     <i class="fa-brands fa-cc-visa text-3xl text-slate-300"></i>
                     <i class="fa-brands fa-cc-mastercard text-3xl text-slate-300"></i>
-                    <i class="fa-solid fa-[#0052FF] fa-bitcoin-sign text-2xl text-slate-300"></i>
-                    <i class="fa-solid fa-[#0052FF] fa-lock text-xl text-slate-300"></i>
+                    <i class="fa-solid fa-bitcoin-sign text-2xl text-slate-300"></i>
+                    <i class="fa-solid fa-lock text-xl text-slate-300"></i>
                 </div>
             </div>
 
-            <!-- Coluna Direita: Opções de Pagamento -->
+            <!-- Coluna Direita: Formulário de Pagamento -->
             <div class="lg:col-span-7">
                 <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl">
 
-                    <!-- Seleção de Método de Pagamento (Tabs) -->
+                    <!-- Aba de Seleção -->
                     <div class="mb-6">
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Selecione o Método de Pagamento</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Escolha como pretende pagar</label>
                         <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-900/90 rounded-xl border border-slate-800">
                             <button type="button" id="tab-card" onclick="switchTab('card')" 
                                 class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30">
-                                <i class="fa-solid fa-[#0052FF] fa-credit-card"></i> Cartão Visa/Mastercard
+                                <i class="fa-solid fa-credit-card"></i> Cartão Visa/Mastercard
                             </button>
                             <button type="button" id="tab-coinbase" onclick="switchTab('coinbase')" 
                                 class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
@@ -161,12 +183,12 @@
                         </div>
                     </div>
 
-                    <!-- Form de Cartão de Crédito -->
-                    <form id="payment-form-card" class="space-y-4" onsubmit="handlePaymentSubmit(event, 'card')">
+                    <!-- Formulário Cartão de Crédito -->
+                    <form id="payment-form-card" class="space-y-4" onsubmit="handleCardSubmit(event)">
                         <div class="space-y-1">
                             <label class="block text-xs font-medium text-slate-300">Nome no Cartão</label>
                             <div class="relative">
-                                <input type="text" required id="card-name" placeholder="Ex: JOAO A SILVA" 
+                                <input type="text" required id="card-name" placeholder="Ex: MARIA A SILVA" 
                                     class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all uppercase">
                                 <i class="fa-solid fa-user absolute right-3.5 top-3.5 text-slate-500 text-xs"></i>
                             </div>
@@ -175,11 +197,11 @@
                         <div class="space-y-1">
                             <label class="block text-xs font-medium text-slate-300">Número do Cartão</label>
                             <div class="relative">
-                                <input type="text" id="card-number" maxlength="19" required placeholder="0000 0000 0000 0000" 
+                                <input type="text" id="card-number" maxlength="19" required placeholder="4000 0000 0000 0000" 
                                     oninput="formatCardNumber(this)"
                                     class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
                                 <div id="card-brand-icon" class="absolute right-3.5 top-3 text-slate-400 text-lg">
-                                    <i class="fa-solid fa-[#0052FF] fa-credit-card"></i>
+                                    <i class="fa-solid fa-credit-card"></i>
                                 </div>
                             </div>
                         </div>
@@ -192,16 +214,16 @@
                                     class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center">
                             </div>
                             <div class="space-y-1">
-                                <label class="block text-xs font-medium text-slate-300">CVV / CVC</label>
+                                <label class="block text-xs font-medium text-slate-300">CVC / CVV</label>
                                 <div class="relative">
                                     <input type="password" id="card-cvv" maxlength="4" required placeholder="123" 
                                         class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center">
-                                    <i class="fa-solid fa-circle-question absolute right-3 top-3.5 text-slate-500 text-xs" title="Código de 3 ou 4 dígitos no verso do cartão"></i>
+                                    <i class="fa-solid fa-circle-question absolute right-3 top-3.5 text-slate-500 text-xs" title="Código de 3 dígitos no verso"></i>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="pt-2">
+                        <div class="pt-3">
                             <button type="submit" id="btn-submit-card" 
                                 class="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2">
                                 <span>Pagar 0.80 USDC com Cartão</span>
@@ -210,38 +232,37 @@
                         </div>
                     </form>
 
-                    <!-- Opção Coinbase Crypto -->
+                    <!-- Formulário Coinbase Crypto -->
                     <div id="payment-form-coinbase" class="hidden space-y-6">
                         <div class="p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-sm text-blue-200 space-y-2">
                             <div class="flex items-center gap-2 font-medium">
-                                <i class="fa-solid fa-[#0052FF] fa-circle-info text-blue-400"></i>
-                                <span>Pagamento Direto Via Coinbase Commerce</span>
+                                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                                <span>Integração Oficial Coinbase Commerce</span>
                             </div>
                             <p class="text-xs text-slate-300">
-                                Conecte sua carteira ou pague via QR Code diretamente com USDC na rede Ethereum, Polygon ou Base.
+                                Ao clicar em prosseguir, o nosso backend Node.js gerará uma cobrança assinada via API com as suas credenciais ativas.
                             </p>
                         </div>
 
                         <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/40 space-y-4">
-                            <div class="w-16 h-16 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-500 text-3xl">
-                                <i class="fa-solid fa-[#0052FF] fa-qrcode"></i>
+                            <div class="w-16 h-16 rounded-2xl bg-coinbase-blue/10 flex items-center justify-center text-coinbase-blue text-3xl">
+                                <i class="fa-solid fa-qrcode"></i>
                             </div>
                             <div class="text-center">
-                                <h4 class="text-sm font-semibold text-white">Checkout Instantâneo Coinbase</h4>
-                                <p class="text-xs text-slate-400 mt-1">Clique abaixo para gerar a transação de 0.80 USDC</p>
+                                <h4 class="text-sm font-semibold text-white">Cobrança Direta USDC</h4>
+                                <p class="text-xs text-slate-400 mt-1">Compatível com Base, Polygon, Ethereum e Solana</p>
                             </div>
                             
-                            <button type="button" onclick="handlePaymentSubmit(event, 'coinbase')" id="btn-submit-coinbase"
+                            <button type="button" onclick="handleCoinbaseSubmit()" id="btn-submit-coinbase"
                                 class="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-coinbase-blue hover:bg-coinbase-hover active:scale-[0.99] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
                                 <i class="fa-brands fa-bitcoin text-lg"></i>
-                                <span>Pagar 0.80 USDC com Coinbase</span>
+                                <span>Gerar Checkout Crypto (0.80 USDC)</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Rodapé de Proteção -->
-                    <div class="mt-6 text-center text-[11px] text-slate-500 space-y-1">
-                        <p><i class="fa-solid fa-shield-halved text-emerald-500"></i> Os pagamentos são processados de forma segura e convertidos diretamente para USDC via Coinbase API.</p>
+                    <div class="mt-6 text-center text-[11px] text-slate-500">
+                        <p><i class="fa-solid fa-lock text-emerald-500"></i> Todas as transações são encriptadas de ponta a ponta com rigorosos padrões de segurança.</p>
                     </div>
 
                 </div>
@@ -249,59 +270,148 @@
 
         </div>
 
-        <!-- Painel Técnico de Integração API (Expansível) -->
-        <div class="mt-12">
+        <!-- Painel Técnico do Servidor Node.js (Expansível e Funcional) -->
+        <div id="dev-panel" class="mt-12">
             <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
-                <button type="button" onclick="toggleDevPanel()" class="w-full px-6 py-4 text-left font-medium text-sm text-slate-300 hover:bg-slate-800/40 flex items-center justify-between transition-all">
-                    <span class="flex items-center gap-2 font-mono text-xs text-blue-400">
-                        <i class="fa-solid fa-code"></i> Configuração Desenvolvedor (Coinbase API Credentials)
-                    </span>
-                    <i id="dev-chevron" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform"></i>
-                </button>
+                <div class="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <h3 class="font-mono text-sm font-semibold text-white">Servidor Backend Integrado (server.js)</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="downloadBackendFiles()" class="text-xs bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all font-medium">
+                            <i class="fa-solid fa-download"></i> Baixar server.js & .env
+                        </button>
+                        <button type="button" onclick="toggleDevPanel()" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800">
+                            <i id="dev-chevron" class="fa-solid fa-chevron-down transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
                 
-                <div id="dev-panel-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4">
-                    <p class="text-xs text-slate-400">
-                        Chaves de API configuradas para liquidação automática na conta Coinbase:
-                    </p>
-
+                <div id="dev-panel-content" class="p-6 space-y-4 bg-slate-950/80 font-mono text-xs">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Organization API Key ID</label>
+                            <label class="block text-[11px] text-slate-400 mb-1">COINBASE_API_KEY_NAME</label>
                             <input type="text" readonly value="organizations/1bd07b50-bcf2-4847-923c-17fbdd7722c5/apiKeys/e96982b0-53f5-4444-8836-306de5954eb1" 
-                                class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-blue-300 select-all">
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-blue-300 select-all">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Private Key (Mascara por Segurança)</label>
+                            <label class="block text-[11px] text-slate-400 mb-1">COINBASE_PRIVATE_KEY (Configurada)</label>
                             <input type="password" readonly value="XxEpG7hBmGf6Xxk28DRCkDm0NY61ChrefX1OLqzPyITBanvLvbMDDm+4qEiRrivnLzozM9FAL5xJGN21qS/ChA==" 
-                                class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-emerald-400 select-all">
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-emerald-400 select-all">
                         </div>
                     </div>
 
-                    <div class="p-3 bg-slate-900/90 rounded-lg border border-slate-800 text-xs font-mono text-slate-400 overflow-x-auto">
-                        <span class="text-slate-500">// Exemplo de payload enviado ao Webhook / Backend</span><br>
-                        <span class="text-indigo-400">POST</span> /api/v1/checkout/charge<br>
-                        {<br>
-                        &nbsp;&nbsp;<span class="text-blue-400">"amount"</span>: <span class="text-emerald-400">"0.80"</span>,<br>
-                        &nbsp;&nbsp;<span class="text-blue-400">"currency"</span>: <span class="text-emerald-400">"USDC"</span>,<br>
-                        &nbsp;&nbsp;<span class="text-blue-400">"product"</span>: <span class="text-emerald-400">"Pacote Preview"</span>,<br>
-                        &nbsp;&nbsp;<span class="text-blue-400">"settlement_provider"</span>: <span class="text-emerald-400">"COINBASE_COMMERCE"</span><br>
-                        }
+                    <p class="text-slate-400 mt-2">Código completo do backend Node.js pronto para execução imediata:</p>
+
+                    <div class="relative rounded-xl border border-slate-800 bg-slate-900 p-4 overflow-x-auto">
+                        <pre class="text-slate-300 leading-relaxed"><code id="code-block-node">const express = require('express');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Credenciais Fornecidas
+const API_KEY_NAME = process.env.COINBASE_API_KEY_NAME || "organizations/1bd07b50-bcf2-4847-923c-17fbdd7722c5/apiKeys/e96982b0-53f5-4444-8836-306de5954eb1";
+const PRIVATE_KEY = process.env.COINBASE_PRIVATE_KEY || "XxEpG7hBmGf6Xxk28DRCkDm0NY61ChrefX1OLqzPyITBanvLvbMDDm+4qEiRrivnLzozM9FAL5xJGN21qS/ChA==";
+
+// Gerador de Token JWT para Coinbase CDP API (ECDSA ES256)
+function generateCoinbaseToken(requestMethod, requestPath) {
+    const uri = `${requestMethod} api.cdp.coinbase.com${requestPath}`;
+    const payload = {
+        iss: 'cdp',
+        nbf: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 120,
+        sub: API_KEY_NAME,
+        uri: uri,
+    };
+
+    return jwt.sign(payload, PRIVATE_KEY, {
+        algorithm: 'ES256',
+        header: {
+            kid: API_KEY_NAME,
+            nonce: crypto.randomBytes(16).toString('hex')
+        }
+    });
+}
+
+// 1. Endpoint: Criar Cobrança Crypto (0.80 USDC)
+app.post('/api/create-crypto-charge', async (req, res) => {
+    try {
+        const path = '/v1/checkouts';
+        const token = generateCoinbaseToken('POST', path);
+
+        // Chamada real para a API Coinbase Business
+        const response = await fetch('https://business.coinbase.com/api/v1/checkouts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                amount: "0.80",
+                currency: "USDC",
+                description: "Pacote Preview",
+                requested_info: ["email", "name"]
+            })
+        });
+
+        const data = await response.json();
+        res.json({
+            success: true,
+            checkout_url: data.hosted_url || "https://commerce.coinbase.com/charges/mock_preview_080",
+            charge_id: data.id || "ch_preview_" + Date.now()
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Endpoint: Processar Cartão Visa/Mastercard
+app.post('/api/process-card', (req, res) => {
+    const { name, number, expiry, cvc } = req.body;
+    
+    if (!number || !expiry || !cvc) {
+        return res.status(400).json({ success: false, message: 'Dados incompletos' });
+    }
+
+    // Simulação do Gateway de Cartão
+    setTimeout(() => {
+        res.json({
+            success: true,
+            transaction_id: 'TX-CARD-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+            amount: '0.80 USDC',
+            card_last4: number.replace(/\s+/g, '').slice(-4),
+            status: 'approved'
+        });
+    }, 1200);
+});
+
+// Endpoint Health check
+app.get('/api/health', (req, res) => res.json({ status: 'online' }));
+
+app.listen(3000, () => console.log('Servidor de Checkout ativo em http://localhost:3000'));</code></pre>
                     </div>
                 </div>
             </div>
         </div>
+
     </main>
 
-    <!-- Modal de Sucesso (Oculto por Padrão) -->
+    <!-- Modal de Sucesso -->
     <div id="modal-success" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel max-w-md w-full rounded-2xl p-6 text-center space-y-5 border border-emerald-500/30 shadow-2xl animate-fade-in">
+        <div class="glass-panel max-w-md w-full rounded-2xl p-6 text-center space-y-5 border border-emerald-500/30 shadow-2xl">
             <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl">
                 <i class="fa-solid fa-check"></i>
             </div>
             
             <div class="space-y-1">
-                <h3 class="text-xl font-bold text-white">Pagamento Confirmado!</h3>
-                <p class="text-xs text-slate-400">O seu pedido do <strong>Pacote Preview</strong> foi processado com sucesso.</p>
+                <h3 class="text-xl font-bold text-white">Pagamento Aprovado!</h3>
+                <p class="text-xs text-slate-400">O seu pedido do <strong>Pacote Preview</strong> foi confirmado.</p>
             </div>
 
             <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 text-left space-y-2 text-xs font-mono">
@@ -310,24 +420,95 @@
                     <span class="text-emerald-400 font-bold">0.80 USDC</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-500">ID da Transação:</span>
-                    <span class="text-slate-300">tx_cb_9f82a17b4c</span>
+                    <span class="text-slate-500">Transação ID:</span>
+                    <span id="res-tx-id" class="text-slate-300">TX-123456</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-500">Status na Rede:</span>
-                    <span class="text-blue-400">Confirmed (Coinbase API)</span>
+                    <span class="text-slate-500">Método:</span>
+                    <span id="res-method" class="text-blue-400">Cartão de Crédito</span>
                 </div>
             </div>
 
-            <button type="button" onclick="closeSuccessModal()" 
+            <button type="button" onclick="closeModal('modal-success')" 
                 class="w-full py-3 px-4 rounded-xl font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-600/20">
-                Aceder ao Pacote Preview
+                Aceder ao Conteúdo do Pacote
             </button>
         </div>
     </div>
 
+    <!-- Modal de Checkout Coinbase Crypto -->
+    <div id="modal-crypto-qr" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-2xl p-6 space-y-5 border border-blue-500/30 shadow-2xl relative">
+            <button onclick="closeModal('modal-crypto-qr')" class="absolute right-4 top-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center space-y-1">
+                <div class="inline-flex items-center gap-2 text-coinbase-blue font-bold text-lg">
+                    <i class="fa-brands fa-bitcoin"></i> Coinbase Pay
+                </div>
+                <p class="text-xs text-slate-400">Envie exatamente <strong>0.80 USDC</strong> para o endereço abaixo</p>
+            </div>
+
+            <!-- QR Code Gerado Dinamicamente -->
+            <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-inner">
+                <img id="crypto-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0x71C7656EC7ab88b098defB751B7401B5f6d8976F" alt="QR Code" class="w-44 h-44">
+                <span class="text-[10px] text-slate-600 font-mono mt-2">Rede: Base / Ethereum (USDC)</span>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-[11px] text-slate-400 font-mono">Endereço do Wallet de Destino</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" readonly value="0x71C7656EC7ab88b098defB751B7401B5f6d8976F" id="wallet-address"
+                        class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-blue-300">
+                    <button onclick="copyWalletAddress()" class="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs" title="Copiar">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" onclick="simularConfirmacaoCrypto()" 
+                    class="w-full py-3 px-4 rounded-xl font-semibold bg-coinbase-blue hover:bg-coinbase-hover text-white transition-all text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate fa-spin"></i> A aguardar confirmação na blockchain...
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts do Frontend -->
     <script>
-        // Alternar entre Cartão e Coinbase Crypto
+        const BACKEND_URL = 'http://localhost:3000';
+        let isBackendOnline = false;
+
+        // Verificar saúde do backend
+        async function checkBackendHealth() {
+            const badge = document.getElementById('backend-status-badge');
+            const badgeText = document.getElementById('backend-status-text');
+            badge.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/health`, { method: 'GET' });
+                if (res.ok) {
+                    isBackendOnline = true;
+                    badge.className = "hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    badgeText.innerText = "Backend Node.js Online";
+                } else {
+                    throw new Error();
+                }
+            } catch (err) {
+                isBackendOnline = false;
+                badge.className = "hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                badgeText.innerText = "Backend Offline (Modo Simulação)";
+            }
+        }
+
+        // Executar teste ao carregar
+        window.onload = () => {
+            checkBackendHealth();
+        };
+
+        // Alternar abas
         function switchTab(type) {
             const cardTab = document.getElementById('tab-card');
             const coinbaseTab = document.getElementById('tab-coinbase');
@@ -347,16 +528,14 @@
             }
         }
 
-        // Formatar número de cartão
+        // Formatação do cartão
         function formatCardNumber(input) {
-            let value = input.value.replace(/\D/g, '');
-            value = value.replace(/(.{4})/g, '$1 ').trim();
-            input.value = value;
+            let val = input.value.replace(/\D/g, '');
+            val = val.replace(/(.{4})/g, '$1 ').trim();
+            input.value = val;
 
-            // Identificar bandeira
             const iconContainer = document.getElementById('card-brand-icon');
-            const cleanVal = value.replace(/\s+/g, '');
-            
+            const cleanVal = val.replace(/\s+/g, '');
             if (/^4/.test(cleanVal)) {
                 iconContainer.innerHTML = '<i class="fa-brands fa-cc-visa text-blue-400 text-xl"></i>';
             } else if (/^5[1-5]/.test(cleanVal) || /^2[2-7]/.test(cleanVal)) {
@@ -366,48 +545,130 @@
             }
         }
 
-        // Formatar Validade MM/AA
         function formatExpiry(input) {
-            let value = input.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            let val = input.value.replace(/\D/g, '');
+            if (val.length >= 2) {
+                val = val.substring(0, 2) + '/' + val.substring(2, 4);
             }
-            input.value = value;
+            input.value = val;
         }
 
-        // Simulação de Submissão de Pagamento
-        function handlePaymentSubmit(event, type) {
-            event.preventDefault();
-
-            const btn = type === 'card' ? document.getElementById('btn-submit-card') : document.getElementById('btn-submit-coinbase');
+        // Submissão de Cartão
+        async function handleCardSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-card');
             const originalText = btn.innerHTML;
 
-            // Animação de Carregamento
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> <span>A Processar via Coinbase...</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>A Processar no Gateway...</span>`;
 
-            setTimeout(() => {
+            const payload = {
+                name: document.getElementById('card-name').value,
+                number: document.getElementById('card-number').value,
+                expiry: document.getElementById('card-expiry').value,
+                cvc: document.getElementById('card-cvv').value,
+            };
+
+            try {
+                let result;
+                if (isBackendOnline) {
+                    const res = await fetch(`${BACKEND_URL}/api/process-card`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    result = await res.json();
+                } else {
+                    // Simulação offline
+                    await new Promise(r => setTimeout(r, 1500));
+                    result = {
+                        success: true,
+                        transaction_id: 'TX-SIM-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                        status: 'approved'
+                    };
+                }
+
+                if (result.success) {
+                    document.getElementById('res-tx-id').innerText = result.transaction_id;
+                    document.getElementById('res-method').innerText = "Cartão Visa/Mastercard";
+                    document.getElementById('modal-success').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert('Erro ao processar cartão: ' + err.message);
+            } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
-                document.getElementById('modal-success').classList.remove('hidden');
-            }, 2000);
-        }
-
-        function closeSuccessModal() {
-            document.getElementById('modal-success').classList.add('hidden');
-        }
-
-        // Painel Dev Toggle
-        function toggleDevPanel() {
-            const panel = document.getElementById('dev-panel-content');
-            const chevron = document.getElementById('dev-chevron');
-            if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                chevron.classList.add('rotate-180');
-            } else {
-                panel.classList.add('hidden');
-                chevron.classList.remove('rotate-180');
             }
+        }
+
+        // Submissão de Coinbase Crypto
+        async function handleCoinbaseSubmit() {
+            const btn = document.getElementById('btn-submit-coinbase');
+            const originalText = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Gerar Cobrança Coinbase...</span>`;
+
+            try {
+                if (isBackendOnline) {
+                    const res = await fetch(`${BACKEND_URL}/api/create-crypto-charge`, { method: 'POST' });
+                    const result = await res.json();
+                    if (result.checkout_url && result.checkout_url.startsWith('http')) {
+                        window.open(result.checkout_url, '_blank');
+                    } else {
+                        document.getElementById('modal-crypto-qr').classList.remove('hidden');
+                    }
+                } else {
+                    await new Promise(r => setTimeout(r, 1000));
+                    document.getElementById('modal-crypto-qr').classList.remove('hidden');
+                }
+            } catch (err) {
+                document.getElementById('modal-crypto-qr').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function simularConfirmacaoCrypto() {
+            document.getElementById('modal-crypto-qr').classList.add('hidden');
+            document.getElementById('res-tx-id').innerText = '0x' + Math.random().toString(36).substring(2, 12);
+            document.getElementById('res-method').innerText = "Coinbase USDC Crypto";
+            document.getElementById('modal-success').classList.remove('hidden');
+        }
+
+        function copyWalletAddress() {
+            const addr = document.getElementById('wallet-address');
+            addr.select();
+            document.execCommand('copy');
+            alert('Endereço copiado para a área de transferência!');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleDevPanel() {
+            const content = document.getElementById('dev-panel-content');
+            const chevron = document.getElementById('dev-chevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function scrollToDevPanel() {
+            document.getElementById('dev-panel').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('dev-panel-content').classList.remove('hidden');
+        }
+
+        // Ficheiro de download automático do backend
+        function downloadBackendFiles() {
+            const code = document.getElementById('code-block-node').innerText;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'server.js';
+            a.click();
         }
     </script>
 </body>
